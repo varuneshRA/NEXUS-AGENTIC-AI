@@ -1,4 +1,7 @@
 **/.env
 venv/
-__pycache__/
+**/__pycache__/
 .vscode/
+generated_plots/
+*.pyc
+*.pyo

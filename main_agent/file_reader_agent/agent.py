@@ -1,5 +1,4 @@
 import os
-import io
 import pandas as pd
 import tkinter as tk
 from tkinter import filedialog

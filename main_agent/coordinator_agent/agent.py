@@ -9,7 +9,7 @@ from data_engineer_agent.agent import data_agent
 from visualization_agent.agent import visualization_agent
 from analysis_agent.agent import analysis_agent 
 from web_search_agent.agent import web_research_agent 
-from file_reader_agent.agent import file_reader_agent  # ✅ Added File Reader Specialist
+from file_reader_agent.agent import file_reader_agent
 
 load_dotenv()
 

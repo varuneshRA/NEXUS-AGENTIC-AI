@@ -14,10 +14,10 @@ def verify_user_credentials(tool_context: ToolContext, username: str) -> str:
     """
     try:
         conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="varun",
-            database="ecommerce_db"
+            host=os.getenv("DB_HOST", "localhost"),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database=os.getenv("DB_NAME", "ecommerce_db"),
         )
         cursor = conn.cursor(dictionary=True)
         

@@ -1,19 +1,27 @@
+import os
 import mysql.connector
 from mysql.connector import Error
+from dotenv import load_dotenv
+
+load_dotenv()
+
+_DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "localhost"),
+    "user": os.getenv("DB_USER", "root"),
+    "password": os.getenv("DB_PASSWORD", ""),
+    "database": os.getenv("DB_NAME", "ecommerce_db"),
+}
+
 
 def get_db_connection():
-    """Establishes connection to the ecommerce_db."""
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="varun", 
-        database="ecommerce_db"
-    )
+    """Establishes a connection to the ecommerce_db."""
+    return mysql.connector.connect(**_DB_CONFIG)
+
 
 def execute_read_query(sql_query: str, max_rows: int = 100) -> dict:
     """Executes SELECT queries safely."""
     if not sql_query.strip().upper().startswith("SELECT"):
-        return {"status": "error", "error": "Only SELECT allowed for read operations."}
+        return {"status": "error", "error": "Only SELECT statements are allowed for read operations."}
 
     conn = None
     try:
@@ -24,7 +32,7 @@ def execute_read_query(sql_query: str, max_rows: int = 100) -> dict:
         return {
             "status": "success",
             "row_count": len(rows),
-            "results": rows
+            "results": rows,
         }
     except Error as e:
         return {"status": "error", "error": str(e)}
@@ -32,6 +40,7 @@ def execute_read_query(sql_query: str, max_rows: int = 100) -> dict:
         if conn and conn.is_connected():
             cursor.close()
             conn.close()
+
 
 def execute_write_query(sql_query: str, params: tuple = None) -> dict:
     """Handles INSERT, UPDATE, DELETE, and CREATE/ALTER operations."""
@@ -44,7 +53,7 @@ def execute_write_query(sql_query: str, params: tuple = None) -> dict:
         return {
             "status": "success",
             "affected_rows": cursor.rowcount,
-            "last_id": cursor.lastrowid
+            "last_id": cursor.lastrowid,
         }
     except Error as e:
         return {"status": "error", "error": str(e)}
@@ -53,12 +62,25 @@ def execute_write_query(sql_query: str, params: tuple = None) -> dict:
             cursor.close()
             conn.close()
 
+
 def get_db_schema() -> dict:
-    """Fetches table names and their column structures so the agent knows the schema."""
+    """Fetches table names and their column structures."""
     query = """
-        SELECT table_name, column_name, data_type 
-        FROM information_schema.columns 
-        WHERE table_schema = 'ecommerce_db'
+        SELECT table_name, column_name, data_type
+        FROM information_schema.columns
+        WHERE table_schema = %s
         ORDER BY table_name, ordinal_position;
     """
-    return execute_read_query(query)
+    conn = None
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute(query, (_DB_CONFIG["database"],))
+        rows = cursor.fetchall()
+        return {"status": "success", "row_count": len(rows), "results": rows}
+    except Error as e:
+        return {"status": "error", "error": str(e)}
+    finally:
+        if conn and conn.is_connected():
+            cursor.close()
+            conn.close()
